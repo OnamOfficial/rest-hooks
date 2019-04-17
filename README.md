@@ -6,7 +6,7 @@
 [![npm version](https://img.shields.io/npm/v/rest-hooks.svg?style=flat-square)](https://www.npmjs.com/package/rest-hooks)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat-square)](http://makeapullrequest.com)
 
-Making dynamic sites performant, scalable, simple to build with almost any API design.
+Making dynamic sites performant, scalable, simple to build with any API design.
 
 <div align="center">
 
@@ -40,11 +40,19 @@ return (
 );
 ```
 
-### And mutation
+### Mutation
 
 ```tsx
 const update = useFetcher(ArticleResource.updateRequest());
 return <ArticleForm onSubmit={data => update(data, { id })} />;
+```
+
+### And subscriptions
+
+```tsx
+const price = useResource(PriceResource.singleRequest(), { symbol });
+useSubscription(PriceResource.singleRequest(), { symbol });
+return price.value;
 ```
 
 ### ...all typed ...fast ...and consistent
@@ -62,8 +70,8 @@ For the small price of 7kb gziped. &nbsp;&nbsp; [🏁Get started now](docs/getti
 - [x] ✨ Optimistic updates
 - [x] 🧘 Flexible to fit any API design (one size fits all)
 - [x] 🌳 Tree-shakable (only use what you need)
+- [x] 🔁 Subscriptions
 - [ ] 🚯 Pluggable garbage collection policy
-- [ ] 🔁 Subscriptions
 - [ ] ♻️ Optional [redux](https://redux.js.org/) integration
 - [ ] 📙 [Storybook](https://storybook.js.org/) mocking
 

@@ -1,12 +1,10 @@
 import { memoize } from 'lodash';
-import { FetchAction, ReceiveAction,  } from '../types';
+import { FetchAction, ReceiveAction, MiddlewareAPI } from '../types';
 
-export const RIC: (cb: (...args: any[]) => void, options: any) => void = (
+export const RIC: (cb: (...args: any[]) => void, options: any) => void =
   typeof (global as any).requestIdleCallback === 'function'
     ? (global as any).requestIdleCallback
-    : (cb) => global.setTimeout(cb, 0)
-  );
-
+    : cb => global.setTimeout(cb, 0);
 
 /** Handles all async network dispatches
  *
@@ -32,7 +30,7 @@ export default class NetworkManager {
   /** Ensures all promises are completed by rejecting remaining. */
   cleanup() {
     for (const k in this.rejectors) {
-      this.rejectors[k](new Error('Cleaning up Network Manager'))
+      this.rejectors[k](new Error('Cleaning up Network Manager'));
     }
   }
 
@@ -53,7 +51,20 @@ export default class NetworkManager {
    */
   protected handleFetch(action: FetchAction, dispatch: React.Dispatch<any>) {
     const fetch = action.payload;
-    const { schema, url, responseType, throttle, resolve, reject } = action.meta;
+    const {
+      schema,
+      url,
+      responseType,
+      throttle,
+      resolve,
+      reject,
+      options = {},
+    } = action.meta;
+    const {
+      dataExpiryLength = this.dataExpiryLength,
+      errorExpiryLength = this.errorExpiryLength,
+    } = options;
+
     const deferedFetch = () =>
       fetch()
         .then(data => {
@@ -65,7 +76,7 @@ export default class NetworkManager {
               schema,
               url,
               date: now,
-              expiresAt: now + this.dataExpiryLength,
+              expiresAt: now + dataExpiryLength,
             },
           });
           return data;
@@ -79,7 +90,7 @@ export default class NetworkManager {
               schema,
               url,
               date: now,
-              expiresAt: now + this.errorExpiryLength,
+              expiresAt: now + errorExpiryLength,
             },
             error: true,
           });
@@ -106,8 +117,7 @@ export default class NetworkManager {
         let promiseHandler: (value?: any) => void;
         if (action.error) {
           promiseHandler = this.rejectors[action.meta.url];
-        }
-        else {
+        } else {
           promiseHandler = this.resolvers[action.meta.url];
         }
         promiseHandler(action.payload);
@@ -130,29 +140,27 @@ export default class NetworkManager {
   getMiddleware = memoize(function<T extends NetworkManager>(this: T) {
     return <R extends React.Reducer<any, any>>({
       dispatch,
-    }: {
-      dispatch: React.Dispatch<React.ReducerAction<R>>;
-    }) => {
+    }: MiddlewareAPI<R>) => {
       return (next: React.Dispatch<React.ReducerAction<R>>) => (
         action: React.ReducerAction<R>,
       ) => {
         switch (action.type) {
-          case 'fetch':
-            this.handleFetch(action, dispatch);
-            return;
-          case 'purge':
-          case 'rpc':
-          case 'receive':
-            if (action.meta.url in this.fetched) {
-              this.handleReceive(action);
-            }
-            // fallthrough is on purpose
-          default:
-            return next(action);
+        case 'fetch':
+          this.handleFetch(action, dispatch);
+          return;
+        case 'purge':
+        case 'rpc':
+        case 'receive':
+          if (action.meta.url in this.fetched) {
+            this.handleReceive(action);
+          }
+          // fallthrough is on purpose
+        default:
+          return next(action);
         }
       };
     };
-  })
+  });
 
   /** Ensures only one request for a given url is in flight at any time
    *

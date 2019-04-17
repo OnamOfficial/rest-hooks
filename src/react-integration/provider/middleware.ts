@@ -4,7 +4,9 @@ import { Middleware } from '../../types';
 
 // TODO: release as own library?
 /** Redux-middleware compatible integration for useReducer() */
-export default function createEnhancedReducerHook(...middlewares: Middleware[]) {
+export default function createEnhancedReducerHook(
+  ...middlewares: Middleware[]
+) {
   const useEnhancedReducer = <R extends React.Reducer<any, any>>(
     reducer: R,
     startingState: React.ReducerState<R>,
@@ -19,7 +21,11 @@ export default function createEnhancedReducerHook(...middlewares: Middleware[]) 
         );
       };
       // closure here around dispatch allows us to change it after middleware is constructed
-      const middlewareAPI = { dispatch: (a: any) => dispatch(a) };
+      const middlewareAPI = {
+        // state is not needed in useMemo() param list since it's retrieved as function
+        getState: () => state,
+        dispatch: (action: React.ReducerAction<R>) => dispatch(action),
+      };
       const chain = middlewares.map(middleware => middleware(middlewareAPI));
       dispatch = compose(chain)(realDispatch);
       return dispatch;

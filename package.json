@@ -1,7 +1,7 @@
 {
   "name": "rest-hooks",
-  "version": "1.0.2",
-  "description": "Simple typed React hooks for REST APIs",
+  "version": "1.4.0-beta.3",
+  "description": "Delightful data fetching for React",
   "sideEffects": false,
   "main": "dist/index.cjs.js",
   "module": "lib/index.js",
@@ -28,7 +28,7 @@
     "test:watch": "npm test -- --watch",
     "test:coverage": "npm test -- --coverage",
     "changelog": "npx auto-changelog --stdout",
-    "beforeStage": "npx auto-changelog"
+    "beforeStage": "npx auto-changelog -p && git add CHANGELOG.md"
   },
   "keywords": [
     "rest",
@@ -64,7 +64,8 @@
     "template": "changelog.hbs",
     "breakingPattern": "\\[breaking\\]",
     "unreleased": true,
-    "commitLimit": false
+    "commitLimit": false,
+    "handlebarsSetup": "changelogSetup.js"
   },
   "github": {
     "release": true
@@ -72,55 +73,59 @@
   "devDependencies": {
     "@anansi/babel-preset": "0.13.2",
     "@anansi/eslint-config": "^0.6.2",
-    "@babel/cli": "^7.2.3",
-    "@babel/core": "^7.4.0",
-    "@babel/plugin-transform-runtime": "^7.3.4",
+    "@babel/cli": "^7.4.3",
+    "@babel/core": "^7.4.3",
+    "@babel/plugin-transform-runtime": "^7.4.3",
     "@types/jest": "^24.0.11",
-    "@types/lodash": "^4.14.122",
+    "@types/lodash": "^4.14.123",
     "@types/nock": "^9.3.1",
-    "@types/sinon": "^7.0.9",
-    "@typescript-eslint/eslint-plugin": "^1.4.2",
-    "@typescript-eslint/parser": "^1.4.2",
-    "auto-changelog": "^1.11.0",
+    "@types/react": "^16.8.12",
+    "@typescript-eslint/eslint-plugin": "^1.6.0",
+    "@typescript-eslint/parser": "^1.6.0",
+    "auto-changelog": "^1.12.0",
     "babel-core": "^7.0.0-bridge.0",
-    "babel-jest": "^24.5.0",
+    "babel-jest": "^24.7.1",
     "babel-plugin-root-import": "^6.1.0",
     "better-npm-run": "^0.1.1",
     "coveralls": "^3.0.3",
     "cpy-cli": "^2.0.0",
     "cross-env": "^5.2.0",
-    "eslint": "^5.14.1",
+    "eslint": "^5.16.0",
     "ignore-styles": "^5.0.1",
-    "jest": "^24.1.0",
+    "jest": "^24.7.1",
     "nock": "^10.0.6",
     "prettier-eslint-cli": "^4.7.1",
-    "react": "16.8.5",
-    "react-dom": "16.8.5",
+    "react": "16.8.6",
+    "react-dom": "16.8.6",
     "react-testing-library": "^5.9.0",
-    "rollup": "^1.4.0",
+    "rollup": "^1.8.0",
     "rollup-plugin-babel": "^4.3.2",
-    "rollup-plugin-commonjs": "^9.2.1",
+    "rollup-plugin-commonjs": "^9.3.4",
     "rollup-plugin-filesize": "^6.0.1",
-    "rollup-plugin-json": "^3.1.0",
+    "rollup-plugin-json": "^4.0.0",
     "rollup-plugin-node-resolve": "^4.0.1",
     "rollup-plugin-uglify": "^6.0.2",
-    "sinon": "^7.2.5",
-    "ts-jest": "^24.0.0",
-    "typescript": "^3.3.4000",
+    "ts-jest": "^24.0.1",
+    "typescript": "^3.4.1",
     "uglify-es": "^3.3.9"
   },
   "dependencies": {
-    "@types/react": "^16.8.8",
     "@types/superagent": "^4.1.1",
     "core-js": "^3.0.0",
-    "flux-standard-action": "^2.0.4",
+    "flux-standard-action": "^2.1.0",
     "lodash": "^4.17.11",
     "normalizr": "^3.3.0",
     "regenerator-runtime": "^0.13.2",
     "reselect": "^4.0.0",
-    "superagent": "^4.1.0"
+    "superagent": "^5.0.2"
   },
   "peerDependencies": {
+    "@types/react": "^16.8.2",
     "react": "^16.8.2"
+  },
+  "peerDependenciesMeta": {
+    "@types/react": {
+      "optional": true
+    }
   }
 }

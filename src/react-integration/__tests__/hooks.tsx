@@ -1,13 +1,14 @@
 import React, { Suspense } from 'react';
-import { cleanup, render, act, testHook } from 'react-testing-library';
+import { cleanup, render, testHook } from 'react-testing-library';
 import nock from 'nock';
-import { normalize, SchemaBase, SchemaOf } from '../../resource';
+import { normalize } from '../../resource';
 
 import { DispatchContext, StateContext } from '../context';
 import {
   CoolerArticleResource,
   UserResource,
   PaginatedArticleResource,
+  StaticArticleResource,
 } from '../../__tests__/common';
 import {
   useFetcher,
@@ -23,7 +24,7 @@ import { ReadShape } from '../../resource';
 
 async function testDispatchFetch(
   Component: React.FunctionComponent,
-  payloads: any[]
+  payloads: any[],
 ) {
   const dispatch = jest.fn();
   const tree = (
@@ -48,8 +49,8 @@ async function testDispatchFetch(
 
 function testRestHook(
   callback: () => void,
-  state: State<Resource>,
-  dispatch = (v: ActionTypes) => {}
+  state: State<unknown>,
+  dispatch = (v: ActionTypes) => {},
 ) {
   return testHook(callback, {
     wrapper: ({ children }) => (
@@ -63,7 +64,7 @@ function testRestHook(
 function buildState<S extends Schema>(
   payload: any,
   requestShape: ReadShape<S, any, any>,
-  params: object
+  params: object,
 ): State<Resource> {
   const { entities, result } = normalize(payload, requestShape.schema);
   const url = requestShape.getUrl(params);
@@ -197,7 +198,7 @@ describe('useCache', () => {
             {children}
           </StateContext.Provider>
         ),
-      }
+      },
     );
     expect(article).toBe(null);
     state = buildState(payload, CoolerArticleResource.singleRequest(), payload);
@@ -209,7 +210,7 @@ describe('useCache', () => {
     const state = buildState(
       articlesPages,
       PaginatedArticleResource.listRequest(),
-      {}
+      {},
     );
     let articles: any;
     testRestHook(() => {
@@ -233,9 +234,13 @@ describe('useResultCache', () => {
   it('should send defaults with nothing in state', () => {
     let results: any;
     let state = { ...initialState };
-    const defaults = { prevPage: '', nextPage: '' }
+    const defaults = { prevPage: '', nextPage: '' };
     testRestHook(() => {
-      results = useResultCache(PaginatedArticleResource.listRequest(), {}, defaults);
+      results = useResultCache(
+        PaginatedArticleResource.listRequest(),
+        {},
+        defaults,
+      );
     }, state);
     expect(results).toEqual(defaults);
   });
@@ -243,7 +248,7 @@ describe('useResultCache', () => {
     const state = buildState(
       articlesPages,
       PaginatedArticleResource.listRequest(),
-      {}
+      {},
     );
     let results: any;
     testRestHook(() => {
@@ -259,6 +264,9 @@ describe('useRetrieve', () => {
   beforeEach(() => {
     nock('http://test.com')
       .get(`/article-cooler/${payload.id}`)
+      .reply(200, payload);
+    nock('http://test.com')
+      .get(`/article-static/${payload.id}`)
       .reply(200, payload);
     nock('http://test.com')
       .get(`/user/`)
@@ -279,12 +287,33 @@ describe('useRetrieve', () => {
         useRetrieve(CoolerArticleResource.singleRequest(), params);
       },
       initialState,
-      dispatch
+      dispatch,
     );
     expect(dispatch).toBeCalledTimes(0);
     params = payload;
     rerender();
     expect(dispatch).toBeCalled();
+  });
+  it('should dispatch with resource defined dataExpiryLength', async () => {
+    function FetchTester() {
+      useRetrieve(StaticArticleResource.singleRequest(), payload);
+      return null;
+    }
+    await testDispatchFetch(FetchTester, [payload]);
+  });
+  it('should dispatch with request shape defined dataExpiryLength', async () => {
+    function FetchTester() {
+      useRetrieve(StaticArticleResource.longLivingRequest(), payload);
+      return null;
+    }
+    await testDispatchFetch(FetchTester, [payload]);
+  });
+  it('should dispatch with request shape defined errorExpiryLength', async () => {
+    function FetchTester() {
+      useRetrieve(StaticArticleResource.neverRetryOnErrorRequest(), payload);
+      return null;
+    }
+    await testDispatchFetch(FetchTester, [payload]);
   });
 });
 
@@ -309,7 +338,7 @@ describe('useResource', () => {
             id: payload.id,
           },
         ],
-        [UserResource.listRequest(), {}]
+        [UserResource.listRequest(), {}],
       );
       return null;
     }
@@ -319,7 +348,7 @@ describe('useResource', () => {
     const state = buildState(
       payload,
       CoolerArticleResource.singleRequest(),
-      payload
+      payload,
     );
 
     const fbmock = jest.fn();
@@ -343,7 +372,7 @@ describe('useResource', () => {
   it('should NOT suspend even when result is stale', () => {
     const { entities, result } = normalize(
       payload,
-      CoolerArticleResource.getEntitySchema()
+      CoolerArticleResource.getEntitySchema(),
     );
     const url = CoolerArticleResource.url(payload);
     const state = {

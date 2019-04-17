@@ -47,6 +47,30 @@ describe('<RestProvider />', () => {
       isAdmin: true,
     },
   ];
+  const nested = [
+    {
+      id: 5,
+      title: 'hi ho',
+      content: 'whatever',
+      tags: ['a', 'best', 'react'],
+      author: {
+        id: 23,
+        username: 'bob',
+      },
+    },
+    {
+      id: 3,
+      title: 'the next time',
+      content: 'whatever',
+      author: {
+        id: 23,
+        username: 'charles',
+        email: 'bob@bob.com',
+      },
+    },
+  ];
+
+  // TODO: add nested resource test case that has multiple partials to test merge functionality
   let manager: NetworkManager;
   function testProvider(callback: () => void, fbmock: jest.Mock<any, any>) {
     function Fallback() {
@@ -83,9 +107,12 @@ describe('<RestProvider />', () => {
       .get(`/article-cooler/0`)
       .reply(403, {});
     nock('http://test.com')
+      .get(`/article-cooler/`)
+      .reply(200, nested);
+    nock('http://test.com')
       .get(`/user/`)
       .reply(200, users);
-      manager = new MockNetworkManager();
+    manager = new MockNetworkManager();
   });
   afterEach(() => {
     manager.cleanup();
@@ -152,7 +179,7 @@ describe('<RestProvider />', () => {
     expect(article.title).toBe(payload.title);
 
     await del({}, payload);
-    expect(error).toBeDefined()
+    expect(error).toBeDefined();
     expect(error.status).toBe(404);
   });
   it('useResource() should throw errors on bad network', async () => {
@@ -172,9 +199,9 @@ describe('<RestProvider />', () => {
     }, fbmock);
     expect(fbmock).toBeCalled();
     try {
-      await (manager as any).fetched[url]
-    } catch(e) {}
-    expect(error).toBeDefined()
+      await (manager as any).fetched[url];
+    } catch (e) {}
+    expect(error).toBeDefined();
     expect(error.status).toBe(403);
   });
   it('should resolve parallel useResource() request', async () => {
@@ -190,7 +217,7 @@ describe('<RestProvider />', () => {
             id: payload.id,
           },
         ],
-        [UserResource.listRequest(), {}]
+        [UserResource.listRequest(), {}],
       );
     }, fbmock);
     expect(fbmock).toBeCalled();

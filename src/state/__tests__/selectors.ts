@@ -55,7 +55,7 @@ describe('selectors', () => {
     });
     it('should be null without entity', async () => {
       const state = {
-        entities: {[CoolerArticleResource.getKey()]: {}},
+        entities: { [CoolerArticleResource.getKey()]: {} },
         results: {
           [CoolerArticleResource.url(params)]: params.id,
         },
@@ -79,6 +79,23 @@ describe('selectors', () => {
 
       expect(selected).toBe(article);
     });
+    it('should find value when no result exists but primary key is used when using nested schema', async () => {
+      const pageArticle = PaginatedArticleResource.fromJS(article);
+      let { schema, getUrl } = PaginatedArticleResource.singleRequest();
+      const select = makeSchemaSelector(schema, getUrl);
+      const state = {
+        entities: {
+          [PaginatedArticleResource.getKey()]: {
+            [params.id]: pageArticle,
+          },
+        },
+        results: {},
+        meta: {},
+      };
+      const selected = select(state, params);
+
+      expect(selected).toBe(pageArticle);
+    });
     it('should find value when not using primary key as param', async () => {
       const urlParams = { title: 'bob' };
       const state = {
@@ -90,9 +107,7 @@ describe('selectors', () => {
         results: { [CoolerArticleResource.url(urlParams)]: params.id },
         meta: {},
       };
-      expect(
-        select(state, urlParams),
-      ).toBe(article);
+      expect(select(state, urlParams)).toBe(article);
     });
     it('should throw when results are Array', async () => {
       const params = { title: 'bob' };
@@ -101,9 +116,7 @@ describe('selectors', () => {
         results: { [CoolerArticleResource.url(params)]: [5, 6, 7] },
         meta: {},
       };
-      expect(() =>
-        select(state, params),
-      ).toThrow();
+      expect(() => select(state, params)).toThrow();
     });
     it('should throw when results are Object', async () => {
       const params = { title: 'bob' };
@@ -114,17 +127,20 @@ describe('selectors', () => {
         },
         meta: {},
       };
-      expect(() =>
-        select(state, params),
-      ).toThrow();
+      expect(() => select(state, params)).toThrow();
     });
     it('should handle nested resources', async () => {
-      const nestedArticle = NestedArticleResource.fromJS({ ...params, user: 23 });
-      const user = UserResource.fromJS({ id: 23, username: 'anne' })
+      const nestedArticle = NestedArticleResource.fromJS({
+        ...params,
+        user: 23,
+      });
+      const user = UserResource.fromJS({ id: 23, username: 'anne' });
 
       const state = {
         entities: {
-          [NestedArticleResource.getKey()]: { [`${nestedArticle.pk()}`]: nestedArticle },
+          [NestedArticleResource.getKey()]: {
+            [`${nestedArticle.pk()}`]: nestedArticle,
+          },
           [UserResource.getKey()]: { [`${user.pk()}`]: user },
         },
         results: {},
@@ -206,16 +222,18 @@ describe('selectors', () => {
       };
       const shape = PaginatedArticleResource.listRequest();
       const select = makeSchemaSelector(shape.schema, shape.getUrl);
-      const selected = select(
-        state,
-        params,
-      );
+      const selected = select(state, params);
 
       expect(selected).toEqual(articles);
     });
     it('should throw with invalid schemas', async () => {
       const shape = PaginatedArticleResource.listRequest();
-      expect(() => makeSchemaSelector({'happy': {'go': {'lucky': 5}}} as any, shape.getUrl)).toThrow();
+      expect(() =>
+        makeSchemaSelector(
+          { happy: { go: { lucky: 5 } } } as any,
+          shape.getUrl,
+        ),
+      ).toThrow();
     });
   });
 });

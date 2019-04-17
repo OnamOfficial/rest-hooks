@@ -83,9 +83,42 @@ return (
 
 ### static urlRoot: string
 
-Must be globally unique - even if you don't use it in url().
+Used to build url patterns in `url()` and `listUrl()`. Used as the default in
+`getKey()` so typically you'll want this to be globally unique per Resource.
 
-## Provided and overridable methods
+### static getKey()
+
+This defines the key for the Resource itself, rather than an instance. As seen below, by default it
+simply returns the urlRoot since this is typically globally unique. However if you want to share
+urlRoot across different Resources, be sure to override this.
+
+```typescript
+/** Returns the globally unique identifier for this Resource */
+static getKey<T extends typeof Resource>(this: T) {
+  return this.urlRoot;
+}
+```
+
+## Data methods
+
+### static merge<T extends typeof Resource>(first: InstanceType<T>, second: InstanceType<T>) => InstanceType<T>
+
+Takes only the defined (non-default) values of first and second and creates a new instance copying them over.
+Second will override values of first.
+
+### static hasDefined<T extends typeof Resource>(instance: InstanceType<T>, key: keyof InstanceType<T>) => boolean
+
+Returns whether provided `key` is defined (non-default) in `instance`.
+
+### static toObjectDefined<T extends typeof Resource>(instance: AbstractInstanceType<T>) => Partial<InstanceType<T>>
+
+Returns an `Object` with only the defined (non-default) members of `instance`.
+
+### static keysDefined<T extends typeof Resource>(instance: InstanceType<T>) => (keyof InstanceType<T>)[]
+
+Returns an `Array` of all defined (non-default) keys of `instance`.
+
+## Static network methods and properties
 
 These are the basic building blocks used to compile the [Request shapes](../api/RequestShape.md) below.
 
@@ -108,6 +141,10 @@ on network error. This can be useful to override to really customize your transp
 Returns the [shape of the data](https://github.com/paularmstrong/normalizr/blob/master/docs/api.md#schema)
 when requesting one resource at a time. Defaults to a plain object
 containing the keys. This can be useful to override if your response is in a different form.
+
+### static getRequestOptions() => [RequestOptions](../api/RequestShape.md#RequestOptions) | undefined
+
+Returns the default request options for this resource. By default this returns undefined
 
 ## [Request shapes](../api/RequestShape.md)
 
